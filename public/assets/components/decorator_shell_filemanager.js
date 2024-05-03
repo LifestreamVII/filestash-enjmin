@@ -3,7 +3,7 @@ import { onDestroy } from "../lib/skeleton/lifecycle.js";
 import { animate, slideYOut } from "../lib/animate.js";
 import { qs } from "../lib/dom.js";
 import { loadCSS } from "../helpers/loader.js";
-import { init as initBreadcrumb } from "../components/breadcrumb.js";
+import { init as initBreadcrumb } from "./breadcrumb.js";
 
 export default function(ctrl) {
     const urlToPath = (pathname = "") => decodeURIComponent(pathname.split("/").filter((chunk, i) => i !== 1).join("/"));
