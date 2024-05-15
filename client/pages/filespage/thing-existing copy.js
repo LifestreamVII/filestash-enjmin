@@ -266,7 +266,7 @@ class ExistingThingComponent extends React.Component {
     onThingClick(e) {
         if (this.props.folderviewer) {
             e.preventDefault();
-            this.props.onRefresh(this.props.file.path);
+            this.props.onRefresh(pathBuilder(this.props.path, this.props.file.name, this.props.file.type));
         } else
         if (e.ctrlKey === true || e.target.classList.contains("component_checkbox")) {
             e.preventDefault();
@@ -280,7 +280,7 @@ class ExistingThingComponent extends React.Component {
     onThingFolderSelect(e) {
         if (this.props.folderviewer) {
             e.preventDefault();
-            this.props.onFolderPick(this.props.file.path);
+            this.props.onFolderPick(pathBuilder(this.props.path, this.props.file.name, this.props.file.type));
         }
     }
 
@@ -299,7 +299,7 @@ class ExistingThingComponent extends React.Component {
     }
 
     render(highlight) {
-        const { connectDragSource, connectDropFile, connectDropNativeFile } = this.props || {};
+        const { connectDragSource, connectDropFile, connectDropNativeFile } = this.props;
         let className = "";
         if (this.props.isDragging) {
             className += "is-dragging ";
@@ -329,7 +329,7 @@ class ExistingThingComponent extends React.Component {
             if ($box.classList.contains("view-grid") === false) return;
             $box.style.transform = `scale(${scaleNumber})`;
         };
-        if (!this.props.folderviewer)
+
         return connectDragSource(connectDropNativeFile(connectDropFile(
             <div className={"component_thing" + ` view-${this.props.view}`+
                             (this.props.selected === true ? " selected" : " not-selected")}>
@@ -377,34 +377,6 @@ class ExistingThingComponent extends React.Component {
                 </ToggleableLink>
             </div>,
         )));
-        else return (
-            <div className={"component_thing" + ` view-${this.props.view}`+
-                            (this.props.selected === true ? " selected" : " not-selected")}>
-                <div
-                    onClick={this.onThingClick.bind(this)}
-                    disabled={this.props.file.icon === "loading" || this.state.is_renaming}>
-                    <Card
-                        className={className + " " + this.state.hover}>
-                        <Input type="checkbox" checked={this.props.selected} onMouseUp={(e) => onClickCheckbox(e, 1)} onMouseDown={(e) => onClickCheckbox(e, 0.95)}/>
-                        <Image
-                            preview={this.state.preview}
-                            icon={this.props.file.icon || this.props.file.type}
-                            view={this.props.view}
-                            path={path.join(this.props.path, this.props.file.name)}
-                            hide_extension={this.props.metadata.hide_extension} />
-                        <Filename
-                            filename={this.props.file.name}
-                            filesize={this.props.file.size}
-                            filetype={this.props.file.type}
-                            hide_extension={this.props.metadata.hide_extension}
-                            onRename={this.onRename.bind(this)}
-                            is_renaming={this.state.is_renaming}
-                            onRenameCancel={this.onRenameRequest.bind(this, false)} />
-                        <div className="selectionOverlay"></div>
-                    </Card>
-                </div>
-            </div>
-        )
     }
 }
 
@@ -416,10 +388,6 @@ export const ExistingThing = EventEmitter(
             ),
         ),
     ),
-);
-
-export const ExistingThingDragLess = EventEmitter(
-    ExistingThingComponent
 );
 
 export default function ToggleableLink(props) {

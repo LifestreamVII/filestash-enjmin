@@ -10,11 +10,13 @@ import {
     onMultiDownload, onUpload, onSearch,
 } from "./filespage.helper";
 import { NgIf, NgShow, Loader, EventReceiver, LoggedInOnly, ErrorPage } from "../components/";
-import { notify, settings_get, settings_put } from "../helpers/";
+import { RectangleSelection } from "../components/rectangleselect";
+import { alert, notify, settings_get, settings_put } from "../helpers/";
 import { BreadCrumb, FileSystem, FrequentlyAccess, Submenu, Sidebar } from "./filespage/";
 import { MobileFileUpload } from "./filespage/filezone";
 import InfiniteScroll from "react-infinite-scroller";
 import { t } from "../locales/";
+import FolderViewer from "../components/folderviewer";
 
 const PAGE_NUMBER_INIT = 2;
 const LOAD_PER_SCROLL = 48;
@@ -26,8 +28,20 @@ const LAST_PAGE_PARAMS = {
     page_number: PAGE_NUMBER_INIT,
 };
 
+const findReactComponent = (el) => {
+    for (const key in el) {
+        if (key.startsWith('__reactInternalInstance$')) {
+          const fiberNode = el[key];
+    
+          return fiberNode && fiberNode.return && fiberNode.return.stateNode;
+        }
+    }
+    return null;
+}
+
 export class FilesPageComponent extends React.Component {
     constructor(props) {
+        console.log("constructor");
         super(props);
         if (props.match.url.slice(-1) != "/") {
             this.props.history.push(props.match.url + "/");
@@ -40,11 +54,15 @@ export class FilesPageComponent extends React.Component {
             view: settings_get("filespage_view") || CONFIG["default_view"] || "grid",
             is_search: false,
             files: [],
+            rect_selected: [],
             selected: [],
+            selecting: 0,
             permissions: null,
             frequents: null,
             tags: null,
             page_number: PAGE_NUMBER_INIT,
+            startCoord: [0, 0],
+            endCoord: [0, 0],
             loading: true,
         };
         this.$scroll = createRef();
@@ -53,7 +71,13 @@ export class FilesPageComponent extends React.Component {
         this.shortcut = this.shortcut.bind(this);
     }
 
+    $filesystem = node => {
+        // same as Hooks example, re-render on changes
+        console.log(node);
+    };
+
     componentDidMount() {
+        console.log("componentDidMount");
         this.onRefresh(this.state.path, "directory");
 
         // subscriptions
@@ -69,6 +93,7 @@ export class FilesPageComponent extends React.Component {
         this.props.subscribe("file.rename", onRename.bind(this));
         this.props.subscribe("file.rename.multiple", onMultiRename.bind(this));
         this.props.subscribe("file.delete", onDelete.bind(this));
+        this.props.subscribe("file.dviewer", this.onDViewer.bind(this));
         this.props.subscribe("file.delete.multiple", onMultiDelete.bind(this));
         this.props.subscribe("file.download.multiple", onMultiDownload.bind(this));
         this.props.subscribe("file.refresh", this.onRefresh.bind(this));
@@ -76,7 +101,21 @@ export class FilesPageComponent extends React.Component {
         window.addEventListener("keydown", this.shortcut);
     }
 
+    componentDidUpdate(prevState, prevProps) {
+        console.log("componentDidUpdate");
+        console.log(prevProps.selected);
+        console.log(prevProps.selecting);
+        if (prevProps.selected && typeof prevProps.selected === "array")
+            {
+            }
+    }
+
+    rehydrateSel() {
+        return JSON.parse(localStorage.getItem('selection')) || [];
+    }
+
     componentWillUnmount() {
+        console.log("componentWillUnmount");
         this.props.unsubscribe("file.upload");
         this.props.unsubscribe("file.create");
         this.props.unsubscribe("file.rename");
@@ -131,6 +170,7 @@ export class FilesPageComponent extends React.Component {
     }
 
     onRefresh(path = this.state.path) {
+        console.log("onRefresh");
         this._cleanupListeners();
         const observer = Files.ls(path, this.state.show_hidden).subscribe((res) => {
             if (res.status !== "ok") {
@@ -188,6 +228,25 @@ export class FilesPageComponent extends React.Component {
                 });
             });
         });
+    }
+
+    onDViewer(filename, res="") {
+
+        const onRel = r => {
+            res = r;
+        } 
+
+        alert.now(
+            (
+                <div style={{width: "690px"}}>
+                    <p>hello</p>
+                    <FolderViewer path={"/"} reload={onRel}></FolderViewer>
+                </div>
+            ),
+            () => {
+                console.log(res);
+            }, true
+        );
     }
 
     onView() {
@@ -262,6 +321,59 @@ export class FilesPageComponent extends React.Component {
         return;
     }
 
+    rectangleSelect() {
+        this.state.selecting = 1;
+        let startX;
+        let startY;
+        let endX;
+        let endY;
+        if (this.state.startCoord[0] < this.state.endCoord[0]) {
+          [startX] = this.state.startCoord;
+          [endX] = this.state.endCoord;
+        } else {
+          [endX] = this.state.startCoord;
+          [startX] = this.state.endCoord;
+        }
+        if (this.state.startCoord[1] < this.state.endCoord[1]) {
+          [, startY] = this.state.startCoord;
+          [, endY] = this.state.endCoord;
+        } else {
+          [, endY] = this.state.startCoord;
+          [, startY] = this.state.endCoord;
+        }
+        const files = [];
+        [...document.getElementsByClassName("component_thing")].forEach(
+          (file) => {
+            const fileCoord = file.getBoundingClientRect();
+            const fileComponent = findReactComponent(file);
+            if (
+              ((fileCoord.right > startX && fileCoord.right < endX)
+                  || (fileCoord.left > startX && fileCoord.left < endX)
+                  || (fileCoord.right > startX
+                      && fileCoord.right > endX
+                      && fileCoord.left < startX
+                      && fileCoord.left < endX))
+              && ((fileCoord.top > startY && fileCoord.top < endY)
+                  || (fileCoord.bottom > startY
+                      && fileCoord.bottom < endY)
+                  || (fileCoord.top < startY
+                      && fileCoord.top < endY
+                      && fileCoord.bottom > startY
+                      && fileCoord.bottom > endY))
+            ) {
+                if (fileComponent && !this.state.selected.includes(fileComponent.props.file.path)) {
+                    fileComponent.props.emit("file.select", fileComponent.props.file.path);
+                }
+            }
+            else {
+                if (fileComponent && this.state.selected.includes(fileComponent.props.file.path)) {
+                    fileComponent.props.emit("file.select", fileComponent.props.file.path);
+                }
+            }
+          },
+        );
+      };
+
     toggleSelect(path) {
         const idx = this.state.selected.indexOf(path);
         if (idx == -1) {
@@ -307,16 +419,39 @@ export class FilesPageComponent extends React.Component {
                                         onViewUpdate={(value) => this.onView(value)}
                                         onSortUpdate={(value) => this.onSort(value)}
                                         accessRight={this.state.permissions || {}}
-                                        selected={this.state.selected} />
+                                        selected={!this.state.selected.length ? this.rehydrateSel() : this.state.selected} />
                                     <NgIf cond={!this.state.loading}>
-                                        <FileSystem
-                                            path={this.state.path} sort={this.state.sort}
-                                            view={this.state.view} selected={this.state.selected}
-                                            files={this.state.files.slice(0, this.state.page_number * LOAD_PER_SCROLL)}
-                                            isSearch={this.state.is_search}
-                                            metadata={this.state.permissions || {}}
-                                            onSort={this.onSort.bind(this)}
-                                            onView={this.onView.bind(this)} />
+                                        <RectangleSelection
+                                            onMouseUp={() => {
+                                                this.state.selecting = 0;
+                                                console.log("mouse up !");
+                                                console.log("-------------------------------");
+                                                console.log(this.state.selected);
+                                                localStorage.setItem('selection', JSON.stringify(this.state.selected.length ? this.state.selected : []));
+                                                console.log("-------------------------------");
+                                            }}
+                                            onSelect={(e, coords) => {
+                                                this.setState({
+                                                    startCoord: coords.origin,
+                                                    endCoord: coords.target
+                                                });
+                                                this.rectangleSelect();
+                                            }}
+                                            style={{
+                                                backgroundColor: "rgba(0,0,255,0.4)",
+                                                borderColor: "blue"
+                                            }}
+                                        >
+                                            <FileSystem
+                                                ref={this.$filesystem}
+                                                path={this.state.path} sort={this.state.sort}
+                                                view={this.state.view} selected={!this.state.selected.length ? this.rehydrateSel() : this.state.selected}
+                                                files={this.state.files.slice(0, this.state.page_number * LOAD_PER_SCROLL)}
+                                                isSearch={this.state.is_search}
+                                                metadata={this.state.permissions || {}}
+                                                onSort={this.onSort.bind(this)}
+                                                onView={this.onView.bind(this)} />
+                                        </RectangleSelection>
                                     </NgIf>
                                 </NgShow>
                             </InfiniteScroll>

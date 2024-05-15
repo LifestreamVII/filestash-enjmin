@@ -49,6 +49,11 @@ function MobileFileUploadComponent({ emit, path, accessRight }) {
                     <input onChange={onUpload} type="file" name="file" id="mobilefileupload" multiple/>
                     <label htmlFor="mobilefileupload">
                         <Icon name="upload_white"/>
+                        <span style={{
+                        display: "inline-block",
+                        padding: "16% 0",
+                        color: "white"}}
+                        >Upload...</span>
                     </label>
                 </form>
             </div>
