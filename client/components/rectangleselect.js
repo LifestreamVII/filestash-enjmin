@@ -42,6 +42,11 @@ export class RectangleSelection extends React.Component {
 
   handleMouseDown(e) {
     if (this.props.disabled) return;
+    if (this.props.onMouseDown){
+      let continueSelect = Boolean(this.props.onMouseDown(e));
+      console.log("continue select: "+continueSelect);
+      if (!continueSelect) return;
+    }
     let doubleClick = false;
     clearTimeout(this.animationInProgress);
     this.animationInProgress = null;
@@ -83,11 +88,12 @@ export class RectangleSelection extends React.Component {
         onMouseLeave={() => {
           this.closeSelectionBox();
         }}
-        onMouseDown={e => this.handleMouseDown(e)}
+        onMouseDown={(e)=>{e.persist(); this.handleMouseDown(e);}}
         onMouseUp={() => this.closeSelectionBox()}
         onMouseMove={evt => {
+          evt.persist();
           if (this.state.hold && !this.state.selectionBox) {
-            if (this.props.onMouseDown) this.props.onMouseDown();
+            if (this.props.onMouseDown) this.props.onMouseDown(evt);
             this.setState({ selectionBox: true });
           }
           if (this.state.selectionBox && !this.animationInProgress) {
@@ -102,6 +108,7 @@ export class RectangleSelection extends React.Component {
           }
         }}
       >
+        {this.props.children}
         {this.state.selectionBox && (
           <div
             className={`react-rectangle-selection ${this.state.animation}`}
@@ -109,7 +116,6 @@ export class RectangleSelection extends React.Component {
             style={Object.assign(baseStyle, this.props.style)}
           />
         )}
-        {this.props.children}
       </div>
     );
   }

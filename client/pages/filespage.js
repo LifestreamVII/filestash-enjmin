@@ -104,9 +104,13 @@ export class FilesPageComponent extends React.Component {
     componentDidUpdate(prevState, prevProps) {
         console.log("componentDidUpdate");
         console.log(prevProps.selected);
-        console.log(prevProps.selecting);
-        if (prevProps.selected && typeof prevProps.selected === "array")
+        console.log("|||||||||||||||||||||||||||||||||||");
+        console.log(this.state.selected);
+        if (prevProps.selected && prevProps.selected.length && this.state.selected && this.state.selected.length === 0)
             {
+                console.log("replacing");
+                this.setState({selected: prevProps.selected});
+                console.log(this.state.selected);
             }
     }
 
@@ -419,15 +423,20 @@ export class FilesPageComponent extends React.Component {
                                         onViewUpdate={(value) => this.onView(value)}
                                         onSortUpdate={(value) => this.onSort(value)}
                                         accessRight={this.state.permissions || {}}
-                                        selected={!this.state.selected.length ? this.rehydrateSel() : this.state.selected} />
+                                        selected={this.state.selected} />
                                     <NgIf cond={!this.state.loading}>
                                         <RectangleSelection
+                                            onMouseDown={(e) => {
+                                                console.log("mouse down !");
+                                                if (!e.target) return true;
+                                                return !e.target.closest(".component_thing");
+                                            }}
                                             onMouseUp={() => {
                                                 this.state.selecting = 0;
                                                 console.log("mouse up !");
                                                 console.log("-------------------------------");
                                                 console.log(this.state.selected);
-                                                localStorage.setItem('selection', JSON.stringify(this.state.selected.length ? this.state.selected : []));
+                                                // localStorage.setItem('selection', JSON.stringify(this.state.selected.length ? this.state.selected : []));
                                                 console.log("-------------------------------");
                                             }}
                                             onSelect={(e, coords) => {
@@ -445,7 +454,7 @@ export class FilesPageComponent extends React.Component {
                                             <FileSystem
                                                 ref={this.$filesystem}
                                                 path={this.state.path} sort={this.state.sort}
-                                                view={this.state.view} selected={!this.state.selected.length ? this.rehydrateSel() : this.state.selected}
+                                                view={this.state.view} selected={this.state.selected}
                                                 files={this.state.files.slice(0, this.state.page_number * LOAD_PER_SCROLL)}
                                                 isSearch={this.state.is_search}
                                                 metadata={this.state.permissions || {}}
