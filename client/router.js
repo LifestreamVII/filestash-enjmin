@@ -10,7 +10,7 @@ import {
 } from "./helpers/";
 import {
     ModalPrompt, ModalAlert, ModalConfirm, Notification, UploadQueue,
-    LoadingPage,
+    LoadingPage, Sidebar
 } from "./components/";
 
 
@@ -23,8 +23,9 @@ const AdminPage = () => (
 
 export default function AppRouter() {
     return (
-        <div style={{ height: "100%" }}>
-            <BrowserRouter>
+        <div style={{ height: "100%", display: "flex" }}>
+            <Sidebar/>
+            <BrowserRouter style={{flex: "1"}}>
                 <Switch>
                     <Route exact path={URL_HOME} component={HomePage} />
                     <Route path={`${URL_SHARE}/:id*`} component={SharePage} />

@@ -10,6 +10,7 @@ export { Loader } from "./loader";
 export { Fab } from "./fab";
 export { Icon, img_placeholder } from "./icon";
 export { Bundle } from "./bundle";
+export { Sidebar } from "./sidebar";
 export { Modal } from "./modal";
 export { ModalPrompt } from "./prompt";
 export { ModalAlert, Alert } from "./alert";

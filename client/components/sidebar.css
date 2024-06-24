@@ -1,0 +1,140 @@
+.sidebar {
+  width: 250px;
+  background-color: #1e1e1e;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  background: url(https://i.imgur.com/WTpYC3K.png); /* Adjust the path or remove if not applicable */
+  background-size: contain;
+  background-repeat: no-repeat;
+  height: 70px;
+  margin: 0 auto;
+  background-position: center;
+}
+
+.menu {
+  margin-bottom: 20px;
+  border-top: solid 1px #7b7b7b4a;
+  padding: 10px;
+  background: #333333a8;
+  border-radius: 7px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 8px;
+  cursor: pointer;
+  border-radius: 7px;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  background-color: #c1002a;
+}
+
+.menu-item i {
+  margin-right: 10px;
+}
+
+.submenu {
+  flex-grow: 1;
+  border-top: solid 1px #7b7b7b4a;
+  padding: 10px;
+  background: #333333a8;
+  border-radius: 7px;
+}
+
+.storage-section {
+  margin-top: 12px;
+  border-top: solid 1px #7b7b7b4a;
+  padding: 10px;
+  background: #333333a8;
+  border-radius: 7px;
+}
+
+.storage-bar {
+  background-color: #e63946;
+  height: 8px;
+  width: 50%;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+
+.upgrade-button {
+  background-color: #e63946;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.logout {
+  cursor: pointer;
+  text-align: center;
+  padding: 10px;
+  background: #710019;
+  border-radius: 5px;
+  margin-top: 10px;
+  width: 45%;
+}
+
+.submenu-item {
+  margin-left: 5%;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding: 5px 0;
+  font-size: 0.9em;
+  font-weight: 300;
+}
+
+.tree {
+  list-style-type: none;
+  padding-left: 20px;
+  position: relative;
+}
+
+.tree ul {
+  list-style-type: none;
+  margin-left: 20px;
+  padding-left: 10px;
+  border-left: 1px solid #ccc;
+  position: relative;
+}
+
+.tree li {
+  margin: 5px 0;
+  padding: 5px 0 5px 20px;
+  position: relative;
+}
+
+.tree li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -20px;
+  bottom: 0;
+  border-left: 1px solid #ccc;
+}
+
+.tree li::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  width: 20px;
+  border-top: 1px solid #ccc;
+}
+
+.tree li:last-child::after {
+  display: none;
+}
