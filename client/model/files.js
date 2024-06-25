@@ -14,12 +14,13 @@ class FileSystem {
         this.current_path = null;
     }
 
-    ls(path, show_hidden = false) {
+    ls(path, show_hidden = false, force = false) {
         this.current_path = path;
         this.obs && this.obs.complete();
+        if (force) return this._ls_from_cache(path, true).then((r) => r );
         return Observable.create((obs) => {
             this.obs = obs;
-            let keep_pulling_from_http = false;
+            let keep_pulling_from_http = true;
             this._ls_from_cache(path, true).then((cache) => {
                 const fetch_from_http = (_path) => {
                     return this._ls_from_http(_path, show_hidden)
@@ -36,7 +37,7 @@ class FileSystem {
             }).catch((err) => this.obs.error({ message: err && err.message }));
 
             return () => {
-                keep_pulling_from_http = false;
+                keep_pulling_from_http = true;
             };
         });
     }
@@ -528,3 +529,4 @@ const mutateFile = (file, path) => {
 };
 
 export const Files = new FileSystem();
+export {FileSystem};

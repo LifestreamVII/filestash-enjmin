@@ -57,6 +57,14 @@ const config = {
             },
         ],
     },
+    devServer: {
+        proxy: [
+            {
+              context: ['/api'],
+              target: 'http://localhost:8334',
+            },
+        ],
+    },
     plugins: [
         new webpack.DefinePlugin({
             "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),

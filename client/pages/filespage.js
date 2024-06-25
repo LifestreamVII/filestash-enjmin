@@ -199,6 +199,7 @@ export class FilesPageComponent extends React.Component {
             });
         }, (error) => this.props.error(error));
         this.observers.push(observer);
+        console.log(observer);
         if (path === "/") {
             Promise.all([Files.frequents(), Tags.all()])
                 .then(([s, t]) => {
@@ -398,7 +399,7 @@ export class FilesPageComponent extends React.Component {
             $moreLoading = null;
         }
         return (
-            <div className="component_page_filespage">
+            <div className="component_page_filespage" style={{flex: "4"}}>
                 <BreadCrumb className="breadcrumb" path={this.state.path} currentSelection={this.state.selected} />
                 <div onClick={(e) => this.handleMultiSelect([], e)} className="selectablegroup">
                     <div className="page_container">
