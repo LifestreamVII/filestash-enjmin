@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './sidebar.css';
 import { FileSystem, Files } from '../model/files';
+import { Link } from 'react-router-dom/cjs/react-router-dom';
 
 const Folder = ({ name, children, onRefresh, path }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,11 +13,11 @@ const Folder = ({ name, children, onRefresh, path }) => {
 
   return (
       <li>
-          <div className="folder-header" onClick={toggleOpen}>
-              <span className='action-button'>
+          <div className="folder-header">
+              <span onClick={toggleOpen} className='action-button'>
               {isOpen ? "-" : "+"}
               </span>
-            <span>📁 {name}</span>
+            <Link to={"/files"+path}>📁 {name}</Link>
           </div>
           {isOpen && <ul className='tree'>
             { children.map((child, index) => (<Folder key={index} name={child.name} path={child.path} onRefresh={onRefresh} children={child.children ? child.children : []} />))

@@ -24,8 +24,8 @@ const AdminPage = () => (
 export default function AppRouter() {
     return (
         <div style={{ height: "100%", display: "flex" }}>
-            <Sidebar style={{flex: "1"}} />
             <BrowserRouter>
+                <Sidebar style={{flex: "1"}} />
                 <Switch>
                     <Route exact path={URL_HOME} component={HomePage} />
                     <Route path={`${URL_SHARE}/:id*`} component={SharePage} />
