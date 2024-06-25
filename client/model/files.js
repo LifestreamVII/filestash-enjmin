@@ -7,11 +7,21 @@ import {
 
 import { Observable } from "rxjs/Observable";
 import { cache } from "../helpers/";
+import { Subject } from "rxjs";
 
 class FileSystem {
     constructor() {
         this.obs = null;
         this.current_path = null;
+        this.updateSubject = new Subject();
+    }
+
+    get updates() {
+        return this.updateSubject.asObservable();
+    }
+
+    notifyUpdate(data) {
+        this.updateSubject.next(data);
     }
 
     ls(path, show_hidden = false, force = false) {
@@ -20,7 +30,7 @@ class FileSystem {
         if (force) return this._ls_from_cache(path, true).then((r) => r );
         return Observable.create((obs) => {
             this.obs = obs;
-            let keep_pulling_from_http = true;
+            let keep_pulling_from_http = false;
             this._ls_from_cache(path, true).then((cache) => {
                 const fetch_from_http = (_path) => {
                     return this._ls_from_http(_path, show_hidden)
@@ -35,9 +45,8 @@ class FileSystem {
                 };
                 fetch_from_http(path);
             }).catch((err) => this.obs.error({ message: err && err.message }));
-
             return () => {
-                keep_pulling_from_http = true;
+                keep_pulling_from_http = false;
             };
         });
     }

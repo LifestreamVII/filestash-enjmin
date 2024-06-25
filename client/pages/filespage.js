@@ -180,6 +180,7 @@ export class FilesPageComponent extends React.Component {
             if (res.status !== "ok") {
                 return;
             }
+            Files.notifyUpdate(path);
             this.setState({
                 permissions: res.permissions,
                 files: sort(res.results, this.state.sort),

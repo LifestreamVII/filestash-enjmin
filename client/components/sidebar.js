@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './sidebar.css';
-import { FileSystem } from '../model/files';
+import { FileSystem, Files } from '../model/files';
 
 const Folder = ({ name, children, onRefresh, path }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,11 +13,13 @@ const Folder = ({ name, children, onRefresh, path }) => {
   return (
       <li>
           <div className="folder-header" onClick={toggleOpen}>
+              <span className='action-button'>
               {isOpen ? "-" : "+"}
+              </span>
             <span>📁 {name}</span>
           </div>
           {isOpen && <ul className='tree'>
-            { children.map((child, index) => (<Folder key={index} name={child.name} path={child.path} onRefresh={onRefresh} children={[]} />))
+            { children.map((child, index) => (<Folder key={index} name={child.name} path={child.path} onRefresh={onRefresh} children={child.children ? child.children : []} />))
             }
           </ul>
           }
@@ -74,7 +76,30 @@ const Sidebar = () => {
         if (res.status !== "ok") {
             return;
         }
-        setFolders(res.results.filter((result) => result.type === "directory"));
+        // Filter directories from results
+        const directories = res.results.filter((result) => result.type === "directory");
+        // Update the state with new children for the matching folder
+        if (p === '/') 
+          {
+            setFolders(directories);
+            return;
+          }
+        console.log(directories);
+        setFolders((currentFolders) => {
+          const updateFolderChildren = (folders, path, children) => {
+            return folders.map((folder) => {
+              if (folder.path === path) {
+                // Found the matching folder, update its children
+                return { ...folder, children };
+              } else if (folder.children && folder.children.length > 0) {
+                // Recursively update children folders if any
+                return { ...folder, children: updateFolderChildren(folder.children, path, children) };
+              }
+              return folder;
+            });
+        };
+          return updateFolderChildren(currentFolders, p, directories);
+        });
         setPath(p);
       }, (error) => setError(error));
       setObservers(observers => [...observers, observer]);
@@ -84,7 +109,12 @@ const Sidebar = () => {
   }
 
   useEffect(() => {
-    onRefresh("/");
+    onRefresh();
+    const subscription = Files.updates.subscribe((res) => {
+      console.log("refreshing..........................................;;")
+      onRefresh(path);
+    });
+    setObservers(observers => [...observers, subscription]);
   }, []);
 
   return (
@@ -111,10 +141,10 @@ const Sidebar = () => {
       </div>
 
       <div className="submenu">
-      <button onClick={()=>{onRefresh(path)}}>Refresh</button>
-      <ul>
+      <button onClick={()=>{onRefresh("/")}}>Refresh</button>
+      <ul className='tree'>
         {folders.map((folder, index) => (
-          <Folder key={index} onRefresh={onRefresh} name={folder.name} path={folder.path} children={[]} />
+          <Folder key={index} onRefresh={onRefresh} name={folder.name} path={folder.path} children={folder.children ? folder.children : []} />
         ))}
       </ul>
       </div>

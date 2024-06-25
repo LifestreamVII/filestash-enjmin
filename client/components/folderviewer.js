@@ -53,6 +53,7 @@ export default class FolderViewer extends React.Component {
             if (res.status !== "ok") {
                 return;
             }
+            Files.notifyUpdate(path);
             this.setState({
                 permissions: res.permissions,
                 files: res.results,
