@@ -30,6 +30,7 @@
 }
 
 .menu-item {
+  transition: all ease-out 0.2s;
   display: flex;
   align-items: center;
   padding: 12px 8px;
@@ -37,7 +38,11 @@
   border-radius: 7px;
 }
 
-.menu-item:hover,
+.menu-item:hover
+{
+  background-color: #8f001f;
+}
+
 .menu-item.active {
   background-color: #c1002a;
 }

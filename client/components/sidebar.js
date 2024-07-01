@@ -17,7 +17,7 @@ const Folder = ({ name, children, onRefresh, path }) => {
               <span onClick={toggleOpen} className='action-button'>
               {isOpen ? "-" : "+"}
               </span>
-            <Link to={"/files"+path}>📁 {name}</Link>
+            <Link to={"/files"+path}>📁 {name ? name : ""}</Link>
           </div>
           {isOpen && <ul className='tree'>
             { children.map((child, index) => (<Folder key={index} name={child.name} path={child.path} onRefresh={onRefresh} children={child.children ? child.children : []} />))
@@ -129,15 +129,19 @@ const Sidebar = () => {
       <div className="menu">
         <div className="menu-item active">
           <i className="icon home-icon"></i>
-          <span>Accueil</span>
+          <Link to={"/"}>Mes fichiers</Link>
         </div>
         <div className="menu-item">
           <i className="icon label-icon"></i>
-          <span>Labels</span>
+          <Link to={"/tags"}>Tags</Link>
         </div>
         <div className="menu-item">
           <i className="icon trash-icon"></i>
-          <span>Corbeille</span>
+          <Link to={"/trash"}>Corbeille</Link>
+        </div>
+        <div className="menu-item">
+          <i className="icon contact-icon"></i>
+          <Link to={"/contact"}>Contact</Link>
         </div>
       </div>
 

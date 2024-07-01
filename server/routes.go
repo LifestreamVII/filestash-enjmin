@@ -8,6 +8,11 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strconv"
+    "io/ioutil"
+    "database/sql"
+    "time"
+
+    _ "github.com/go-sql-driver/mysql"
 
 	"github.com/gorilla/mux"
 
@@ -15,6 +20,120 @@ import (
 	. "github.com/mickael-kerjean/filestash/server/ctrl"
 	. "github.com/mickael-kerjean/filestash/server/middleware"
 )
+
+// Assuming db is your database connection
+var db *sql.DB
+
+func init() {
+    var err error
+    db, err = sql.Open("mysql", "user:password@/dbname")
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
+
+func FetchUserByUsername(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    username := vars["username"]
+
+    token, err := getToken()
+    if err != nil {
+        http.Error(w, "Failed to get API token", http.StatusInternalServerError)
+        return
+    }
+
+	// Assuming username and password are your Basic Auth credentials
+	basicAuthUsername := "your_username"
+	basicAuthPassword := "your_password"
+
+	// Create a new request to the /api/token endpoint
+	req, err := http.NewRequest("GET", "http://localhost:8080/api/token", nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	req.SetBasicAuth(basicAuthUsername, basicAuthPassword)
+
+	// Make the request
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Parse the JSON response to extract the token
+	var tokenResponse struct {
+		Token string `json:"token"`
+	}
+	if err := json.Unmarshal(body, &tokenResponse); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write the token to the response
+	w.Write([]byte(tokenResponse.Token))
+}
+
+// getToken fetches a new token from the remote API and stores it in the database.
+func getToken() (string, error) {
+    // Check if a valid token exists in the database
+    var token string
+    var expiration time.Time
+    err := db.QueryRow("SELECT token, expiration FROM api_tokens WHERE expiration > NOW()").Scan(&token, &expiration)
+    if err == nil {
+        return token, nil
+    }
+
+    // Define the request body, if needed by the API
+    requestBody, err := json.Marshal(map[string]string{
+        "client_id": "your_client_id",
+        "client_secret": "your_client_secret",
+    })
+    if err != nil {
+        return "", err
+    }
+
+    // Make the request to the remote API
+    resp, err := http.Post("http://example.com/api/token", "application/json", bytes.NewBuffer(requestBody))
+    if err != nil {
+        return "", err
+    }
+    defer resp.Body.Close()
+
+    // Read and decode the response body
+    var response struct {
+        Token     string `json:"token"`
+        ExpiresIn int    `json:"expires_in"` // Token lifetime in seconds
+    }
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return "", err
+    }
+    err = json.Unmarshal(body, &response)
+    if err != nil {
+        return "", err
+    }
+
+    // Calculate the expiration time based on the current time and the token lifetime
+    expiration = time.Now().Add(time.Duration(response.ExpiresIn) * time.Second)
+
+    // Store the new token and its expiration in the database
+    _, err = db.Exec("INSERT INTO api_tokens (token, expiration) VALUES (?, ?)", response.Token, expiration)
+    if err != nil {
+        return "", err
+    }
+
+    return response.Token, nil
+}
 
 func Build(a App) *mux.Router {
 	var (
@@ -104,6 +223,9 @@ func Build(a App) *mux.Router {
 	r.HandleFunc("/healthz", NewMiddlewareChain(HealthHandler, []Middleware{}, a)).Methods("GET")
 	r.HandleFunc("/custom.css", NewMiddlewareChain(CustomCssHandler, []Middleware{}, a)).Methods("GET")
 	r.PathPrefix("/doc").Handler(NewMiddlewareChain(DocPage, []Middleware{}, a)).Methods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+
+	// API for SFTPGo
+	r.HandleFunc("/api/user/{username}", FetchUserByUsername).Methods("GET")
 
 	if os.Getenv("DEBUG") == "true" {
 		initDebugRoutes(r)
