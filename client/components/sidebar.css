@@ -67,10 +67,16 @@
   border-radius: 7px;
 }
 
-.storage-bar {
+
+.quota-bar{
   background-color: #e63946;
+  height: 100%;
+}
+
+.storage-bar {
+  background-color: #53535344;
   height: 8px;
-  width: 50%;
+  width: 100%;
   margin-bottom: 10px;
   border-radius: 10px;
 }

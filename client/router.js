@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import {
     NotFoundPage, ConnectPage, HomePage, SharePage, LogoutPage,
@@ -12,6 +12,7 @@ import {
     ModalPrompt, ModalAlert, ModalConfirm, Notification, UploadQueue,
     LoadingPage, Sidebar
 } from "./components/";
+import { Files } from "./model";
 
 
 const LazyAdminPage = React.lazy(() => import(/* webpackChunkName: "admin" */"./pages/adminpage"));
@@ -21,11 +22,22 @@ const AdminPage = () => (
     </Suspense>
 );
 
+
 export default function AppRouter() {
+
+    const [quota, setQuota] = useState({
+        quota_size: 0,
+        used_quota_size: 0,
+    });
+
+    useEffect(() => {
+        Files.quota().then((res) => {setQuota(res);});
+    }, []);
+
     return (
         <div style={{ height: "100%", display: "flex" }}>
             <BrowserRouter>
-                <Sidebar style={{flex: "1"}} />
+                <Sidebar style={{flex: "1"}} quota={quota}/>
                 <Switch>
                     <Route exact path={URL_HOME} component={HomePage} />
                     <Route path={`${URL_SHARE}/:id*`} component={SharePage} />

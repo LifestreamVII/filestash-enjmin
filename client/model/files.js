@@ -184,6 +184,14 @@ class FileSystem {
             });
     }
 
+    quota(user) {
+        const url = appendShareToUrl("/api/sftpgo/quota/" + user);
+        return http_get(url).then((r) => {
+            if (r.status === "ok") return r.results;
+            else return Promise.reject(r);
+        });
+    }
+
     zip(paths) {
         let url = appendShareToUrl("/api/files/zip?" + paths.map((p) => "path=" + prepare(p)).join("&"));
         if (paths.length === 1 && filetype(paths[0]) === "file") {

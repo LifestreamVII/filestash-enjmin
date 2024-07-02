@@ -7,10 +7,18 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-
+	"fmt"
+	
 	. "github.com/mickael-kerjean/filestash/server/common"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	
+	"io/ioutil"
+	"net/http"
+	"encoding/json"
+	"database/sql"
+    _ "github.com/go-sql-driver/mysql"
+
 )
 
 var SftpCache AppCache
@@ -39,6 +47,74 @@ func init() {
 		Log.Debug("plg_backend_sftp::vacuum")
 		c.Close()
 	})
+}
+
+func connectToMySQL() (*sql.DB, error) {
+    return sql.Open("mysql", "root:password@tcp(localhost:3306)/yourdb")
+}
+
+func getToken(db *sql.DB) (string, error) {
+    var token string
+    err := db.QueryRow("SELECT token FROM tokens WHERE expiry > NOW()").Scan(&token)
+    if err == sql.ErrNoRows {
+        // Token does not exist or is expired, generate a new one
+        newToken, err := generateNewToken()
+        if err != nil {
+            return "", err
+        }
+        // Store the new token in the database
+		fmt.Println(newToken)
+        _, err = db.Exec("INSERT INTO tokens (token, expiry) VALUES (?, DATE_ADD(NOW(), INTERVAL 25 MINUTE))", newToken)
+        if err != nil {
+            return "", err
+        }
+        return newToken, nil
+    } else if err != nil {
+        return "", err
+    }
+    return token, nil
+}
+
+func generateNewToken() (string, error) {
+	username := "lois"
+	password := "admin"
+
+	// Create a new HTTP client
+	client := &http.Client{}
+
+	// Create a new request
+	req, err := http.NewRequest("GET", "http://localhost:8082/api/v2/token", nil)
+	if err != nil {
+		return "", err
+	}
+
+	// Set the Basic Auth header
+	req.SetBasicAuth(username, password)
+
+	// Send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// Parse the response body to get the access_token
+	var response struct {
+		AccessToken string `json:"access_token"`
+	}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", err
+	}
+
+	// Return the access_token as a string
+	return response.AccessToken, nil
 }
 
 func (s Sftp) Init(params map[string]string, app *App) (IBackend, error) {
@@ -262,6 +338,50 @@ func (b Sftp) Home() (string, error) {
 		return cwd + "/", nil
 	}
 	return cwd, nil
+}
+
+func StorInfo(username string) (any, error) {
+    db, err := connectToMySQL()
+    if err != nil {
+        return "", err
+    }
+    defer db.Close()
+
+    token, err := getToken(db)
+    if err != nil {
+        return "", err
+    }
+
+	// need to start a scan for the given user
+	// add username from server for verification
+
+    // Use the token to make an HTTP request to the quota info endpoint
+    client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://localhost:8082/api/v2/users/"+username, nil)
+    if err != nil {
+        return "", err
+    }
+    req.Header.Add("Authorization", "Bearer "+token)
+    resp, err := client.Do(req)
+    if err != nil {
+        return "", err
+    }
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return "", err
+    }
+
+	var response struct {
+		QuotaSize float64 `json:"quota_size"`
+		UsedQuotaSize float64 `json:"used_quota_size"`
+	}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", err
+	}
+
+    return response, nil
 }
 
 func (b Sftp) Ls(path string) ([]os.FileInfo, error) {

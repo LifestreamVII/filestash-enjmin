@@ -7,7 +7,7 @@ require (
 	github.com/creack/pty v1.1.18
 	github.com/cretz/bine v0.1.0
 	github.com/duosecurity/duo_universal_golang v1.0.3
-	github.com/go-sql-driver/mysql v1.5.0
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/h2non/bimg v1.1.5
@@ -55,6 +55,7 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.6.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.3.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.0.0 // indirect

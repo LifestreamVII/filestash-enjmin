@@ -28,7 +28,7 @@ const Folder = ({ name, children, onRefresh, path }) => {
   );
 };
 
-const Sidebar = () => {
+const Sidebar = (props) => {
   
   // const sample_folders = [
   //   {name: "Root", path: "/",
@@ -156,7 +156,9 @@ const Sidebar = () => {
 
       <div className="storage-section">
         <h4>Storage</h4>
-        <div className="storage-bar"></div>
+        <div className="storage-bar">
+          <div className="quota-bar" style={{ width: `${(props.quota.used_quota_size / props.quota.quota_size) * 100}%` }}></div>
+        </div>
       </div>
       <div className="logout">
         Log Out

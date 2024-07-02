@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	// "github.com/gorilla/mux"
+	"github.com/mickael-kerjean/filestash/server/plugin/plg_backend_sftp"
 
 	. "github.com/mickael-kerjean/filestash/server/common"
 	"github.com/mickael-kerjean/filestash/server/model"
@@ -525,6 +527,23 @@ func FileMkdir(ctx *App, res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	SendSuccessResult(res, nil)
+}
+
+func FileQuota(ctx *App, res http.ResponseWriter, req *http.Request) {
+	if model.CanUpload(ctx) == false {
+		Log.Debug("quota::permission 'permission denied'")
+		SendErrorResult(res, NewError("Permission denied", 403))
+		return
+	}
+	username := ctx.Session["username"]
+	// username := mux.Vars(req)["username"]
+	q, err := plg_backend_sftp.StorInfo(username)
+	if err != nil {
+		Log.Debug("quota::backend ", err.Error())
+		SendErrorResult(res, err)
+		return
+	}
+	SendSuccessResultsWithMetadata(res, q, nil)
 }
 
 func FileTouch(ctx *App, res http.ResponseWriter, req *http.Request) {
