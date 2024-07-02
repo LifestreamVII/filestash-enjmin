@@ -13,6 +13,7 @@ import {
     LoadingPage, Sidebar
 } from "./components/";
 import { Files } from "./model";
+import { useLocation } from "react-router-dom/cjs/react-router-dom";
 
 
 const LazyAdminPage = React.lazy(() => import(/* webpackChunkName: "admin" */"./pages/adminpage"));
@@ -26,12 +27,15 @@ const AdminPage = () => (
 export default function AppRouter() {
 
     const [quota, setQuota] = useState({
-        quota_size: 0,
+        quota_size: 100,
         used_quota_size: 0,
     });
 
     useEffect(() => {
-        Files.quota().then((res) => {setQuota(res);});
+        Files.quota().then((res) => {
+            if (res.quota_size)
+                setQuota(res);
+        });
     }, []);
 
     return (

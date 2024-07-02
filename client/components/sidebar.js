@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './sidebar.css';
 import { FileSystem, Files } from '../model/files';
-import { Link } from 'react-router-dom/cjs/react-router-dom';
+import { Link, useLocation, NavLink } from 'react-router-dom/cjs/react-router-dom';
+import {
+  URL_HOME, URL_FILES, URL_VIEWER, URL_LOGIN, URL_LOGOUT,
+  URL_ADMIN, URL_SHARE, URL_TAGS,
+} from "../helpers/";
 
 const Folder = ({ name, children, onRefresh, path }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +34,8 @@ const Folder = ({ name, children, onRefresh, path }) => {
 
 const Sidebar = (props) => {
   
+  const [notAllowed, setNotAllowed] = useState(false);
+  
   // const sample_folders = [
   //   {name: "Root", path: "/",
   //     children: [{name: "My Folder 2", path: "/folder1",
@@ -51,6 +57,8 @@ const Sidebar = (props) => {
   const [folders, setFolders] = useState(sample_folders);
 
   const [path, setPath] = useState('/');
+
+  const location = useLocation(); 
 
   const [observers, setObservers] = useState([]);
   
@@ -74,7 +82,9 @@ const Sidebar = (props) => {
     setLoading(true);
     cleanupListeners();
     const observer = files.ls(p, false).subscribe((res) => {
-        if (res.status !== "ok") {
+        if ((res.status && res.status !== "ok") || (res.code && res.code !== 200)) {
+            setLoading(false);
+            setNotAllowed(true);
             return;
         }
         // Filter directories from results
@@ -116,9 +126,20 @@ const Sidebar = (props) => {
       onRefresh(path);
     });
     setObservers(observers => [...observers, subscription]);
+    return () => {
+      // cleaning up the listeners here
+    }
   }, []);
 
+  useEffect(() => {
+
+    return () => {
+        // removing the listener when location changes
+    }
+ }, [location])
+
   return (
+    !notAllowed ? (
     <div className="sidebar">
       <div className="logo-section">
         <div className="logo"></div>
@@ -127,14 +148,14 @@ const Sidebar = (props) => {
       { error ? <div className="error">{error}</div> : null }
       { loading ? <div className="loading">{"Loading"}</div> : null }
       <div className="menu">
-        <div className="menu-item active">
+        <NavLink to={"/files"} activeClassName="active" className={`menu-item`}>
           <i className="icon home-icon"></i>
-          <Link to={"/"}>Mes fichiers</Link>
-        </div>
-        <div className="menu-item">
-          <i className="icon label-icon"></i>
-          <Link to={"/tags"}>Tags</Link>
-        </div>
+          Mes fichiers
+        </NavLink>
+        <NavLink to={"/tags"} activeClassName="active" className={`menu-item`}>
+          <i className="icon home-icon"></i>
+          Tags
+        </NavLink>
         <div className="menu-item">
           <i className="icon trash-icon"></i>
           <Link to={"/trash"}>Corbeille</Link>
@@ -164,7 +185,7 @@ const Sidebar = (props) => {
         Log Out
       </div>
     </div>
-  );
+  ) : "");
 };
 
 export { Sidebar };
