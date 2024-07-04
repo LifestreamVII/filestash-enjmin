@@ -10,6 +10,8 @@ export function goToFiles(history, path, state) {
     return Promise.resolve("ok");
 }
 
+export const URL_TRASH = "/trash";
+
 
 export const URL_VIEWER = "/view";
 export function goToViewer(history, path, state) {

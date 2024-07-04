@@ -156,14 +156,18 @@ const Sidebar = (props) => {
           <i className="icon home-icon"></i>
           Tags
         </NavLink>
-        <div className="menu-item">
-          <i className="icon trash-icon"></i>
-          <Link to={"/trash"}>Corbeille</Link>
-        </div>
-        <div className="menu-item">
-          <i className="icon contact-icon"></i>
-          <Link to={"/contact"}>Contact</Link>
-        </div>
+        <NavLink to={"/trash"} activeClassName="active" className={`menu-item`}>
+          <i className="icon home-icon"></i>
+          Corbeille
+        </NavLink>
+        <NavLink to={"/contact"} activeClassName="active" className={`menu-item`}>
+          <i className="icon home-icon"></i>
+          Contact
+        </NavLink>
+        <NavLink to={"/404"} activeClassName="active" className={`menu-item`}>
+          <i className="icon home-icon"></i>
+          [404]
+        </NavLink>
       </div>
 
       <div className="submenu">

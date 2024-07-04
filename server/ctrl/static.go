@@ -48,7 +48,7 @@ func LegacyIndexHandler(ctx *App, res http.ResponseWriter, req *http.Request) { 
 		return
 	} else if url != "/" && strings.HasPrefix(url, "/s/") == false &&
 		strings.HasPrefix(url, "/view/") == false && strings.HasPrefix(url, "/files/") == false &&
-		url != "/login" && url != "/logout" && strings.HasPrefix(url, "/admin") == false && strings.HasPrefix(url, "/tags") == false {
+		url != "/login" && url != "/logout" && strings.HasPrefix(url, "/admin") == false && strings.HasPrefix(url, "/tags") == false && strings.HasPrefix(url, "/trash") == false {
 		NotFoundHandler(ctx, res, req)
 		return
 	}
@@ -191,7 +191,7 @@ func ServeFrontofficeHandler(ctx *App, res http.ResponseWriter, req *http.Reques
 	url := req.URL.Path
 	if url != "/" && strings.HasPrefix(url, "/s/") == false &&
 		strings.HasPrefix(url, "/view/") == false && strings.HasPrefix(url, "/files/") == false &&
-		url != "/login" && url != "/logout" && strings.HasPrefix(url, "/tags") == false {
+		url != "/login" && url != "/logout" && strings.HasPrefix(url, "/tags") == false && strings.HasPrefix(url, "/trash") == false {
 		NotFoundHandler(ctx, res, req)
 		return
 	}

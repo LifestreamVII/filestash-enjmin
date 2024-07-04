@@ -2,11 +2,11 @@ import React, { Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import {
     NotFoundPage, ConnectPage, HomePage, SharePage, LogoutPage,
-    FilesPage, ViewerPage, TagsPage,
+    FilesPage, ViewerPage, TagsPage, TrashPage
 } from "./pages/";
 import {
     URL_HOME, URL_FILES, URL_VIEWER, URL_LOGIN, URL_LOGOUT,
-    URL_ADMIN, URL_SHARE, URL_TAGS,
+    URL_ADMIN, URL_SHARE, URL_TAGS, URL_TRASH
 } from "./helpers/";
 import {
     ModalPrompt, ModalAlert, ModalConfirm, Notification, UploadQueue,
@@ -49,6 +49,7 @@ export default function AppRouter() {
                     <Route path={`${URL_FILES}/:path*`} component={FilesPage} />
                     <Route path={`${URL_VIEWER}/:path*`} component={ViewerPage} />
                     <Route path={`${URL_TAGS}/:path*`} component={TagsPage} />
+                    <Route path={`${URL_TRASH}/:path*`} component={TrashPage} />
                     <Route path={URL_LOGOUT} component={LogoutPage} />
                     <Route path={URL_ADMIN} component={AdminPage} />
                     <Route component={NotFoundPage} />

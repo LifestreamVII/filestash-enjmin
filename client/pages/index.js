@@ -5,4 +5,5 @@ export { LogoutPage } from "./logout";
 export { NotFoundPage } from "./notfoundpage";
 export { FilesPage } from "./filespage";
 export { ViewerPage } from "./viewerpage";
+export { TrashPage } from "./trashpage";
 export { TagsPage } from "./tagspage";
