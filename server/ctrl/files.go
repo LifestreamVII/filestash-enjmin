@@ -155,6 +155,64 @@ func FileLs(ctx *App, res http.ResponseWriter, req *http.Request) {
 	SendSuccessResultsWithMetadata(res, files, perms)
 }
 
+// Used only in SFTP backend to list the trash folder
+// Here no permission object is sent back as the UI won't be using it
+// One could implement this directly into the existing FileLs function using simply a bool parameter (false by default)
+func FileTrash(ctx *App, res http.ResponseWriter, req *http.Request) {
+	username := ctx.Session["username"]
+	path, err := PathBuilder(ctx, "/.trash")
+	if err != nil {
+		Log.Debug("ls::path '%s'", err.Error())
+		SendErrorResult(res, err)
+		return
+	}
+	for _, auth := range Hooks.Get.AuthorisationMiddleware() {
+		if err = auth.Ls(ctx, path); err != nil {
+			Log.Info("ls::auth '%s'", err.Error())
+			SendErrorResult(res, ErrNotAuthorized)
+			return
+		}
+	}
+	entries, err := ctx.Backend.Ls(path)
+	if err != nil {
+		Log.Debug("ls::backend '%s'", err.Error())
+		SendErrorResult(res, err)
+		return
+	}
+	fmt.Println(plg_backend_sftp.LsTrash(username))
+	files := make([]FileInfo, len(entries))
+	etagger := fnv.New32()
+	etagger.Write([]byte(path + strconv.Itoa(len(entries))))
+	for i := 0; i < len(entries); i++ {
+		name := entries[i].Name()
+		modTime := entries[i].ModTime().UnixNano() / int64(time.Millisecond)
+
+		if i < 200 { // etag is generated from a few values to avoid large memory usage
+			etagger.Write([]byte(name + strconv.Itoa(int(modTime))))
+		}
+
+		files[i] = FileInfo{
+			Name: name,
+			Size: entries[i].Size(),
+			Time: modTime,
+			Type: func(mode os.FileMode) string {
+				if mode.IsRegular() {
+					return "file"
+				}
+				return "directory"
+			}(entries[i].Mode()),
+		}
+	}
+
+	etagValue := base64.StdEncoding.EncodeToString(etagger.Sum(nil))
+	res.Header().Set("Etag", etagValue)
+	if etagValue != "" && req.Header.Get("If-None-Match") == etagValue {
+		res.WriteHeader(http.StatusNotModified)
+		return
+	}
+	SendSuccessResultsWithMetadata(res, files, nil)
+}
+
 func FileCat(ctx *App, res http.ResponseWriter, req *http.Request) {
 	var (
 		file              io.ReadCloser

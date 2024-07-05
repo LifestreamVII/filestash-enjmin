@@ -58,6 +58,7 @@ func Build(a App) *mux.Router {
 	files.HandleFunc("/cat", NewMiddlewareChain(FileAccess, middlewares, a)).Methods("OPTIONS")
 	files.HandleFunc("/cat", NewMiddlewareChain(FileSave, middlewares, a)).Methods("POST")
 	files.HandleFunc("/ls", NewMiddlewareChain(FileLs, middlewares, a)).Methods("GET")
+	files.HandleFunc("/trash", NewMiddlewareChain(FileTrash, middlewares, a)).Methods("GET")
 	files.HandleFunc("/mv", NewMiddlewareChain(FileMv, middlewares, a)).Methods("POST")
 	files.HandleFunc("/rm", NewMiddlewareChain(FileRm, middlewares, a)).Methods("POST")
 	files.HandleFunc("/mkdir", NewMiddlewareChain(FileMkdir, middlewares, a)).Methods("POST")
@@ -80,6 +81,9 @@ func Build(a App) *mux.Router {
 	sftpgo := r.PathPrefix("/api/sftpgo").Subrouter()
 	middlewares = []Middleware{ApiHeaders, SecureHeaders, SecureOrigin, WithPublicAPI, SessionStart, LoggedInOnly}
 	sftpgo.HandleFunc("/quota/{username}", NewMiddlewareChain(FileQuota, middlewares, a)).Methods("GET")
+
+	// API for extra features
+	// ...
 
 	// Webdav server / Shared Link
 	middlewares = []Middleware{IndexHeaders, SecureHeaders}

@@ -75,6 +75,37 @@ func getToken(db *sql.DB) (string, error) {
     return token, nil
 }
 
+type TrashedFile struct {
+	ID            int64  `field:"id"`
+	User      string `field:"user"`
+	Path      string `field:"path"`
+	Date           string `field:"date"`
+}
+func getTrashBin(db *sql.DB, user string) ([]TrashedFile, error) {
+
+
+    var trashbin []TrashedFile
+    rows, err := db.Query("SELECT * FROM trashbin WHERE user = ?", user)
+	if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+	for rows.Next() {
+        var file TrashedFile
+        if err := rows.Scan(&file.ID, &file.User, &file.Path, 
+		&file.Date); err != nil {
+            return trashbin, err
+        }
+        trashbin = append(trashbin, file)
+    }
+    if err = rows.Err(); err != nil {
+        return trashbin, err
+    }
+
+    return trashbin, nil
+}
+
 func generateNewToken() (string, error) {
 	username := "lois"
 	password := "admin"
@@ -382,6 +413,21 @@ func StorInfo(username string) (any, error) {
 	}
 
     return response, nil
+}
+
+func LsTrash(username string) (any, error) {
+    db, err := connectToMySQL()
+    if err != nil {
+        return make([]string, 0), err
+    }
+    defer db.Close()
+
+    trashbin, err := getTrashBin(db, username)
+    if err != nil {
+        return make([]string, 0), err
+    }
+
+    return trashbin, nil
 }
 
 func (b Sftp) Ls(path string) ([]os.FileInfo, error) {
