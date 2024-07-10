@@ -61,6 +61,7 @@ func Build(a App) *mux.Router {
 	files.HandleFunc("/trash", NewMiddlewareChain(FileTrash, middlewares, a)).Methods("GET")
 	files.HandleFunc("/mv", NewMiddlewareChain(FileMv, middlewares, a)).Methods("POST")
 	files.HandleFunc("/rm", NewMiddlewareChain(FileRm, middlewares, a)).Methods("POST")
+	files.HandleFunc("/trm", NewMiddlewareChain(FileTrRm, middlewares, a)).Methods("POST")
 	files.HandleFunc("/mkdir", NewMiddlewareChain(FileMkdir, middlewares, a)).Methods("POST")
 	files.HandleFunc("/touch", NewMiddlewareChain(FileTouch, middlewares, a)).Methods("POST")
 	middlewares = []Middleware{ApiHeaders, SecureHeaders, SecureOrigin, WithPublicAPI, SessionStart, LoggedInOnly}

@@ -11,11 +11,13 @@ export class ModalPrompt extends Popup {
     }
 
     componentDidMount() {
-        prompt.subscribe((text, okCallback, cancelCallback, type) => {
+        prompt.subscribe((text, okCallback, cancelCallback, type, options) => {
             this.setState({
                 appear: true,
                 value: "",
                 error: null,
+                chkbox: null,
+                options: options,
                 type: type || "text",
                 text: text || "",
                 fns: { ok: okCallback, cancel: cancelCallback },
@@ -25,7 +27,7 @@ export class ModalPrompt extends Popup {
 
     onSubmit(e) {
         e && e.preventDefault && e.preventDefault();
-        this.state.fns.ok(this.state.value)
+        this.state.fns.ok(this.state.value, this.state.chkbox)
             .then(() => this.setState({ appear: false }))
             .catch((message) => this.setState({ error: message }));
     }
@@ -38,6 +40,12 @@ export class ModalPrompt extends Popup {
                     <Input autoFocus={true} value={this.state.value}
                         type={this.state.type} autoComplete="new-password"
                         onChange={(e) => this.setState({ value: e.target.value })} />
+                    { this.state.options && this.state.options.hasChkBox && (
+                        <div>
+                            <Input type="checkbox" id="chkBox" value={this.state.chkbox || false} onChange={(e) => this.setState({chkbox : e.target.checked})} />
+                            <label for="chkBox">{this.state.options.chkBoxLabel || ""}</label>
+                        </div>
+                    )}
                     <div className="modal-error-message">{this.state.error}&nbsp;</div>
                 </form>
             </div>

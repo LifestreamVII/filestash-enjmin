@@ -6,7 +6,7 @@ import "./filespage.scss";
 import "./error.scss";
 import { Files, Tags } from "../model/";
 import {
-    sort, onCreate, onRename, onMultiRename, onDelete, onMultiDelete,
+    sort, onCreate, onRename, onMultiRename, onDelete, onMultiDelete, onTrashDelete,
     onMultiDownload, onUpload, onSearch,
 } from "./filespage.helper";
 import { NgIf, NgShow, Loader, EventReceiver, LoggedInOnly, ErrorPage } from "../components/";
@@ -93,6 +93,7 @@ export class FilesPageComponent extends React.Component {
         this.props.subscribe("file.rename", onRename.bind(this));
         this.props.subscribe("file.rename.multiple", onMultiRename.bind(this));
         this.props.subscribe("file.delete", onDelete.bind(this));
+        this.props.subscribe("file.delete.trash", onTrashDelete.bind(this));
         this.props.subscribe("file.dviewer", this.onDViewer.bind(this));
         this.props.subscribe("file.delete.multiple", onMultiDelete.bind(this));
         this.props.subscribe("file.download.multiple", onMultiDownload.bind(this));

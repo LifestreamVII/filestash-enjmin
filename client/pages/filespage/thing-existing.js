@@ -216,20 +216,41 @@ class ExistingThingComponent extends React.Component {
     onDeleteRequest(filename) {
         prompt.now(
             t("Confirm by typing") +" \""+this._confirm_delete_text()+"\"",
-            (answer) => { // click on ok
+            (answer, chkbox=null) => { // click on ok
                 if (answer === this._confirm_delete_text()) {
                     this.setState({ icon: "loading" });
-                    this.props.emit(
-                        "file.delete",
-                        pathBuilder(this.props.path, this.props.file.name, this.props.file.type),
-                        this.props.file.type,
-                    );
+                    if (chkbox === true)
+                    {
+                        console.log(this.props)
+                        console.log(                            pathBuilder(
+                            this.props.path, 
+                            this.props.file.name,
+                            this.props.file.type
+                        ));
+                        this.props.emit(
+                            "file.delete.trash",
+                            pathBuilder(
+                                this.props.path, 
+                                this.props.file.name,
+                                this.props.file.type
+                            )
+                        );
+                    }
+                    else
+                    {
+                        this.props.emit(
+                            "file.delete",
+                            pathBuilder(this.props.path, this.props.file.name, this.props.file.type),
+                            this.props.file.type,
+                        );
+                    }
                     return Promise.resolve();
                 } else {
                     return Promise.reject(t("Doesn't match"));
                 }
             },
             () => {/* click on cancel */},
+            "text", {hasChkBox: true, chkBoxLabel: "Move to trash"}
         );
     }
 

@@ -415,16 +415,16 @@ func StorInfo(username string) (any, error) {
     return response, nil
 }
 
-func LsTrash(username string) (any, error) {
+func LsTrash(username string) ([]TrashedFile, error) {
     db, err := connectToMySQL()
     if err != nil {
-        return make([]string, 0), err
+        return nil, err
     }
     defer db.Close()
 
     trashbin, err := getTrashBin(db, username)
     if err != nil {
-        return make([]string, 0), err
+        return nil, err
     }
 
     return trashbin, nil
@@ -478,6 +478,32 @@ func (b Sftp) Rm(path string) error {
 		return b.err(err)
 	}
 	return nil
+}
+
+func TrRm(backend IBackend, username string, path string, trpath string) error {    
+	// commenting out the return of db errors to avoid blocking the deletion of files
+		
+	err := backend.Mv(path, trpath)
+
+	if err != nil {
+		return err
+	}
+	
+	db, dbErr := connectToMySQL()
+	if dbErr != nil {
+		fmt.Println(dbErr)
+        // return nil, dbErr
+    }
+    defer db.Close()
+
+	_, dbErr = db.Exec("INSERT INTO trashbin (user, path, date) VALUES (?, ?, NOW())", username, path)
+	if dbErr != nil {
+		fmt.Println(dbErr)
+		// return "", dbErr
+	}
+
+	return nil
+		
 }
 
 func (b Sftp) Mv(from string, to string) error {

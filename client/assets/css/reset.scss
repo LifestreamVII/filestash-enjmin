@@ -63,6 +63,7 @@ body {
     background: var(--bg-color);
     color: var(--color);
 }
+.app-router > div:nth-of-type(2) { flex: 4!important; }
 body, html {
     height: 100%;
     margin: 0;

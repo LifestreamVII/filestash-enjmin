@@ -24,16 +24,15 @@ class FileSystem {
         this.updateSubject.next(data);
     }
 
-    ls(path, show_hidden = false, force = false) {
+    ls(path, show_hidden = false, trash = false) {
         this.current_path = path;
         this.obs && this.obs.complete();
-        if (force) return this._ls_from_cache(path, true).then((r) => r );
         return Observable.create((obs) => {
             this.obs = obs;
             let keep_pulling_from_http = false;
             this._ls_from_cache(path, true).then((cache) => {
                 const fetch_from_http = (_path) => {
-                    return this._ls_from_http(_path, show_hidden)
+                    return this._ls_from_http(_path, show_hidden, trash)
                         .then(() => new Promise((done, err) => {
                             window.setTimeout(() => done(), 2000);
                         })).then(() => {
@@ -51,8 +50,8 @@ class FileSystem {
         });
     }
 
-    _ls_from_http(path, show_hidden) {
-        const url = appendShareToUrl("/api/files/ls?path=" + prepare(path));
+    _ls_from_http(path, show_hidden, trash=false) {
+        const url = appendShareToUrl(trash ? "/api/files/trash" : "/api/files/ls?path=" + prepare(path));
         return http_get(url).then((response) => {
             response = fileMiddleware(response, path, show_hidden);
 
@@ -363,10 +362,10 @@ class FileSystem {
         }
     }
 
-    mv(from, to) {
-        const url = appendShareToUrl("/api/files/mv?from=" + prepare(from) + "&to=" + prepare(to));
+    mv(from, to, trash=false) {
+        const url = appendShareToUrl(trash === true ? "/api/files/trm?path=" + prepare(from) : "/api/files/mv?from=" + prepare(from) + "&to=" + prepare(to));
         const origin_path = from;
-        const destination_path = to;
+        const destination_path = trash === true ? "/.trash" : to;
 
         return this._replace(origin_path, "loading")
             .then(this._add(destination_path, "loading"))
@@ -377,6 +376,7 @@ class FileSystem {
                     .then(() => this._replace(destination_path, null, "loading"))
                     .then(() => this._refresh(origin_path, destination_path))
                     .then(() => {
+                        if (trash) return Promise.resolve();
                         cache.update(cache.FILE_PATH, [currentBackend(), currentShare(), origin_path], (data) => {
                             data.path = data.path.replace(origin_path, destination_path);
                             return data;

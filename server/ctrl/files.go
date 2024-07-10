@@ -179,8 +179,11 @@ func FileTrash(ctx *App, res http.ResponseWriter, req *http.Request) {
 		SendErrorResult(res, err)
 		return
 	}
-	fmt.Println(plg_backend_sftp.LsTrash(username))
-	files := make([]FileInfo, len(entries))
+	ogPath, err := plg_backend_sftp.LsTrash(username)
+	if err != nil {
+		Log.Debug("ls::backend '%s'", err.Error())
+	}
+	files := make([]interface{}, len(entries))
 	etagger := fnv.New32()
 	etagger.Write([]byte(path + strconv.Itoa(len(entries))))
 	for i := 0; i < len(entries); i++ {
@@ -191,7 +194,15 @@ func FileTrash(ctx *App, res http.ResponseWriter, req *http.Request) {
 			etagger.Write([]byte(name + strconv.Itoa(int(modTime))))
 		}
 
-		files[i] = FileInfo{
+		files[i] = struct {
+			Name         string
+			Size         int64
+			Time         int64
+			Type         string
+			OgPath       string
+			TrashedDate  string
+			TrashedUser  string
+		}{
 			Name: name,
 			Size: entries[i].Size(),
 			Time: modTime,
@@ -202,6 +213,27 @@ func FileTrash(ctx *App, res http.ResponseWriter, req *http.Request) {
 				return "directory"
 			}(entries[i].Mode()),
 		}
+
+		file := files[i].(struct {
+			Name         string
+			Size         int64
+			Time         int64
+			Type         string
+			OgPath       string
+			TrashedDate  string
+			TrashedUser  string
+		})
+
+		for _, og := range ogPath {
+			if strings.HasSuffix(og.Path, "/"+name) || strings.HasSuffix(og.Path, "/"+name+"/") {
+				file.OgPath = og.Path
+				file.TrashedDate = og.Date
+				file.TrashedUser = og.User
+				break
+			}
+		}
+		files[i] = file
+
 	}
 
 	etagValue := base64.StdEncoding.EncodeToString(etagger.Sum(nil))
@@ -519,6 +551,48 @@ func FileMv(ctx *App, res http.ResponseWriter, req *http.Request) {
 	err = ctx.Backend.Mv(from, to)
 	if err != nil {
 		Log.Debug("mv::backend '%s'", err.Error())
+		SendErrorResult(res, err)
+		return
+	}
+	SendSuccessResult(res, nil)
+}
+
+func FileTrRm(ctx *App, res http.ResponseWriter, req *http.Request) {
+	if model.CanEdit(ctx) == false {
+		Log.Debug("rm::permission 'permission denied'")
+		SendErrorResult(res, NewError("Permission denied", 403))
+		return
+	}
+
+	path, err := PathBuilder(ctx, req.URL.Query().Get("path"))
+	if err != nil {
+		Log.Debug("rm::path '%s'", err.Error())
+		SendErrorResult(res, err)
+		return
+	}
+	
+	_, filename := SplitPath(path)
+	
+	if strings.HasSuffix(path, "/") {
+		parts := strings.Split(path[:len(path)-1], "/")
+		filename = parts[len(parts)-1]+"/"
+		fmt.Println("Directory Name:", filename)
+	}
+
+	fmt.Println("filném: ", filename)
+
+	for _, auth := range Hooks.Get.AuthorisationMiddleware() {
+		if err = auth.Mv(ctx, path, "/.trash"); err != nil {
+			Log.Info("mv::auth '%s'", err.Error())
+			SendErrorResult(res, ErrNotAuthorized)
+			return
+		}
+	}
+
+	username := ctx.Session["username"]
+	err = plg_backend_sftp.TrRm(ctx.Backend, username, path, "/.trash/"+filename)
+	if err != nil {
+		Log.Debug("rm::backend '%s'", err.Error())
 		SendErrorResult(res, err)
 		return
 	}

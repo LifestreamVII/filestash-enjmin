@@ -26,8 +26,12 @@ export function TrashPageComponent({ match }) {
     useEffect(() => {
     
         if (files && files.length > 0)
-            setLoading(false);
-        else
+            {
+                
+                console.log(files);
+                setLoading(false);
+            }
+        else 
             setLoading(true);
 
     }, [files]);
@@ -132,11 +136,12 @@ export function TrashPageComponent({ match }) {
                                                     <span className="component_action" style={{float: "right"}} onClick={(e) => { e.preventDefault(); onClickRemoveFile(file)}}>
                                                         <Icon name="close" />
                                                     </span>
-                                                    <span><Icon name={filetype(file.path)} /></span>
+                                                    <span><Icon name={filetype(file.OgPath) || "file"} /></span>
                                                     <span className="component_filename">
                                                         <span className="file-details">
-                                                            {basename(file.path)}<br/>
-                                                            {path === "/" && (<i>#{file.tag}&nbsp;</i>)}<i>{file.path}</i>
+                                                            {basename(file.Name)}<br/>
+                                                            {file.OgPath && (<i>Original : {file.OgPath}&nbsp;</i>)}<br/>
+                                                            {file.TrashedDate && (<p style={{fontSize: "9px"}}>{file.TrashedDate}</p>)}
                                                         </span>
                                                     </span>
                                                 </Card>

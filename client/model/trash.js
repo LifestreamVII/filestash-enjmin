@@ -9,7 +9,7 @@ const TrashManager = () => {
     const [observers, setObservers] = useState([]);
 
     useEffect(() => {
-        const obs = Files.ls(path, true);
+        const obs = Files.ls(path, true, true);
         setObservers([obs]);
 
         obs.subscribe((files) => {

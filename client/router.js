@@ -39,7 +39,7 @@ export default function AppRouter() {
     }, []);
 
     return (
-        <div style={{ height: "100%", display: "flex" }}>
+        <div className="app-router" style={{ height: "100%", display: "flex" }}>
             <BrowserRouter>
                 <Sidebar style={{flex: "1"}} quota={quota}/>
                 <Switch>

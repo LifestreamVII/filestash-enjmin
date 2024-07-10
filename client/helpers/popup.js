@@ -20,13 +20,13 @@ const Prompt = function() {
     let fn = null;
 
     return {
-        now: function(text, okCallback, cancelCallback, type) {
+        now: function(text, okCallback, cancelCallback, type, options) {
             if (!fn) {
                 return window.setTimeout(() => {
-                    this.now(text, okCallback, cancelCallback, type);
+                    this.now(text, okCallback, cancelCallback, type, options);
                 }, 50);
             }
-            fn(text, okCallback, cancelCallback, type);
+            fn(text, okCallback, cancelCallback, type, options);
         },
         subscribe: function(_fn) {
             fn = _fn;

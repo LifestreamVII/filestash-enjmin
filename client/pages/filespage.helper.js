@@ -134,6 +134,15 @@ export const onDelete = function(path, type) {
         .catch((err) => notify.send(err, "error"));
 };
 
+export const onTrashDelete = function(path) {
+    return Files.mv(path, "/.trash", true)
+        .then(() => notify.send(
+            t("The file '{{VALUE}}' was deleted", Path.basename(path)),
+            "success",
+        ))
+        .catch((err) => notify.send(err, "error"));
+};
+
 export const onMultiDelete = function(arrOfPath) {
     return Promise.all(arrOfPath.map((p) => Files.rm(p)))
         .then(() => notify.send(t("All done!"), "success"))
